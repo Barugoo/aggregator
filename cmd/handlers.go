@@ -39,7 +39,7 @@ func AggregateWorkoutsHandle(inputCh chan<- *aggregator.RunSession, agg aggregat
 			}
 			// made this asynchronous for two reasons
 			// 1. to show-off
-			// 2. to make input API as flexible as possible, being pretty easy to pipe it with some other async data streams (mq, db polling etc.)
+			// 2. to make input API as flexible as possible, being pretty easy to pipe this with any amount of different data sources (mq, db polling etc.)
 			inputCh <- &aggSess
 		}
 

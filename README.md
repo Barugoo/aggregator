@@ -15,7 +15,7 @@ To run the server just execute:
 ```bash
 make run
 ```
-You can access the only endpoint of the server at route `/analyze`
+You can access the only endpoint of the server at route `/analyze?nweeks={ N past weeks to do aggregation on }`
 
 To run unit-tests use:
 ```bash
