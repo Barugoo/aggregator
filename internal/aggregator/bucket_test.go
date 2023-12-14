@@ -1,7 +1,8 @@
 package aggregator
 
 import (
-	"container/list"
+	"github.com/zyedidia/generic/list"
+
 	"errors"
 	"sync"
 	"testing"
@@ -20,7 +21,7 @@ func TestForEachBucket(t *testing.T) {
 		mu:          &sync.RWMutex{},
 		bucketKeyFn: getKeyFn,
 		nextKeyFn:   nextKeyFn,
-		buckets:     make(map[string]*list.List),
+		buckets:     make(map[string]*list.List[*RunSession]),
 	}
 
 	ts := time.Date(2006, 1, 2, 15, 4, 0, 0, time.UTC)
@@ -40,7 +41,7 @@ func TestForEachBucket(t *testing.T) {
 
 	// normal case
 	var bucketCount int64
-	err := agg.forEachBucket(ts, ts.AddDate(1, 0, 0), func(bucketElems *list.List) error {
+	err := agg.forEachBucket(ts, ts.AddDate(1, 0, 0), func(bucketElems *list.List[*RunSession]) error {
 		bucketCount++
 		return nil
 	})
@@ -49,49 +50,7 @@ func TestForEachBucket(t *testing.T) {
 	assert.Equal(t, int64(3), bucketCount)
 
 	// error case
-	err = agg.forEachBucket(ts, ts.AddDate(1, 0, 0), func(bucketElems *list.List) error {
-		return errors.New("oops, something went wrong")
-	})
-	assert.Error(t, err)
-}
-
-func TestForEachBucketElem(t *testing.T) {
-	getKeyFn, nextKeyFn := bucketFuncsFromSize(HourBucketSize)
-
-	agg := &aggregator[*RunSession]{
-		mu:          &sync.RWMutex{},
-		bucketKeyFn: getKeyFn,
-		nextKeyFn:   nextKeyFn,
-		buckets:     make(map[string]*list.List),
-	}
-
-	ts := time.Date(2006, 1, 2, 15, 4, 0, 0, time.UTC)
-	// all the rows located in one bucket
-	agg.insertRow(&RunSession{
-		Timestamp: ts,
-		Distance:  1,
-	})
-	agg.insertRow(&RunSession{
-		Timestamp: ts,
-		Distance:  2,
-	})
-	agg.insertRow(&RunSession{
-		Timestamp: ts,
-		Distance:  3,
-	})
-
-	// normal case
-	var distanceTotal int64
-	err := agg.forEachBucketElem(agg.buckets[getKeyFn(ts)], func(elem *RunSession) error {
-		distanceTotal += elem.GetDistance()
-		return nil
-	})
-	assert.NoError(t, err)
-
-	assert.Equal(t, int64(6), distanceTotal)
-
-	// error case
-	err = agg.forEachBucketElem(agg.buckets[getKeyFn(ts)], func(elem *RunSession) error {
+	err = agg.forEachBucket(ts, ts.AddDate(1, 0, 0), func(bucketElems *list.List[*RunSession]) error {
 		return errors.New("oops, something went wrong")
 	})
 	assert.Error(t, err)

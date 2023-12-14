@@ -7,6 +7,8 @@ require (
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb
 )
 
+require github.com/zyedidia/generic v1.2.2-0.20230625215236-3404399b19f1
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0

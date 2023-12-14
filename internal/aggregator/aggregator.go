@@ -1,7 +1,8 @@
 package aggregator
 
 import (
-	"container/list"
+	"github.com/zyedidia/generic/list"
+
 	"fmt"
 	"sync"
 	"time"
@@ -28,7 +29,7 @@ func NewInMemory[T Row](inputCh <-chan T, bucketSize BucketSize) (Aggregator, er
 
 	a := aggregator[T]{
 		mu:      &sync.RWMutex{},
-		buckets: make(map[string]*list.List),
+		buckets: make(map[string]*list.List[T]),
 	}
 	a.bucketKeyFn, a.nextKeyFn = bucketFuncsFromSize(bucketSize)
 
@@ -46,29 +47,31 @@ func (a *aggregator[T]) insertRow(row T) {
 
 	key := a.bucketKeyFn(row.GetTimestamp())
 
-	var bucketElems *list.List
+	var bucketElems *list.List[T]
 
 	var ok bool
 	if bucketElems, ok = a.buckets[key]; !ok {
-		bucketElems = &list.List{}
-		bucketElems.Init()
+		bucketElems = list.New[T]()
 		a.buckets[key] = bucketElems
 	}
 
-	e := bucketElems.PushFront(row)
-	for e.Next() != nil {
-		// we store each bucket as a list of RunSessions ordered by time
-		if e.Next().Value.(T).GetTimestamp().After(row.GetTimestamp()) {
-			bucketElems.MoveAfter(e, e.Next())
+	var inserted bool
+	for ptr := bucketElems.Front; ptr != nil && !inserted; ptr = ptr.Next {
+		if ptr.Value.GetTimestamp().After(row.GetTimestamp()) {
+			// if current node has older ts than inserted then keep traversing
 			continue
 		}
-		break
+		bucketElems.InsertBefore(ptr, &list.Node[T]{Value: row})
+		inserted = true
+	}
+	if !inserted {
+		bucketElems.PushFront(row)
 	}
 }
 
 type aggregator[T Row] struct {
 	mu      *sync.RWMutex
-	buckets map[string]*list.List
+	buckets map[string]*list.List[T]
 
 	bucketKeyFn func(time.Time) string
 	nextKeyFn   func(string) string

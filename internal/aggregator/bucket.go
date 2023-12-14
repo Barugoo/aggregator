@@ -1,7 +1,8 @@
 package aggregator
 
 import (
-	"container/list"
+	"github.com/zyedidia/generic/list"
+
 	"fmt"
 	"time"
 )
@@ -18,7 +19,7 @@ const (
 type bucketKeyFn func(time.Time) string
 type nextKeyFn func(string) string
 
-func (a *aggregator[T]) forEachBucket(from, to time.Time, fn func(bucketElems *list.List) error) error {
+func (a *aggregator[T]) forEachBucket(from, to time.Time, fn func(bucketElems *list.List[T]) error) error {
 	toKey := a.bucketKeyFn(to)
 
 	for fromKey := a.bucketKeyFn(from); fromKey <= toKey; fromKey = a.nextKeyFn(fromKey) {
@@ -28,19 +29,6 @@ func (a *aggregator[T]) forEachBucket(from, to time.Time, fn func(bucketElems *l
 		}
 		if err := fn(bucketElems); err != nil {
 			return fmt.Errorf("forEachBucket: fn returned error: %w", err)
-		}
-	}
-	return nil
-}
-
-func (a *aggregator[T]) forEachBucketElem(bucketElems *list.List, fn func(elem T) error) error {
-	for bucketElem := bucketElems.Front(); bucketElem != nil; bucketElem = bucketElem.Next() {
-		elem, ok := bucketElem.Value.(T)
-		if !ok {
-			return fmt.Errorf("forEachBucketElem: the bucket list should store object of %T type", elem)
-		}
-		if err := fn(elem); err != nil {
-			return fmt.Errorf("forEachBucketElem: fn returned error: %w", err)
 		}
 	}
 	return nil

@@ -1,7 +1,8 @@
 package aggregator
 
 import (
-	"container/list"
+	"github.com/zyedidia/generic/list"
+
 	"fmt"
 	"time"
 
@@ -20,22 +21,17 @@ func (a *aggregator[T]) Median(from, to time.Time) (*AggregationResult, error) {
 
 	var bucketTotalDistances []int64
 	var bucketTotalTimes []time.Duration
-	err := a.forEachBucket(from, to, func(bucketElems *list.List) error {
 
+	err := a.forEachBucket(from, to, func(bucketElems *list.List[T]) error {
 		startBucketIdx := len(distances)
-		err := a.forEachBucketElem(bucketElems, func(elem T) error {
 
+		bucketElems.Front.Each(func(elem T) {
 			distances = append(distances, elem.GetDistance())
 			times = append(times, elem.GetDuration())
-			return nil
 		})
-		if err != nil {
-			return fmt.Errorf("unable to calculate median: %w", err)
-		}
 
 		bucketTotalDistances = append(bucketTotalDistances, sum(distances[startBucketIdx:]))
 		bucketTotalTimes = append(bucketTotalTimes, sum(times[startBucketIdx:]))
-
 		return nil
 	})
 	if err != nil {
