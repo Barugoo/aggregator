@@ -8,8 +8,8 @@
 # Server
 This program implements HTTP-server as well as `aggregator` lib to execute aggregations on input data in a flexible way
 
-Required envs:
-    - `SERVER_ADDR` - this is the addr on which http server runs. You should pick `0.0.0.0:<port>` if you run this in docker. 
+Required envs:  
+- `SERVER_ADDR` - this is the addr on which http server runs. You should pick `0.0.0.0:<port>` if you run this in docker. 
 
 To run the server just execute:
 ```bash
